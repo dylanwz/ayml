@@ -8,11 +8,21 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      keyframes: {
+        ellipsicalRotate: {
+          "0%": { transform: "rotate(-45deg)" },
+          "100%": { transform: "rotate(-405deg)" },
+        },
+        orbit: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
+      animation: {
+        ellipsicalRotate: "ellipsicalRotate 15s ease-in-out infinite",
+        orbit: "orbit 15s ease-in-out infinite",
+        fastOrbit: "orbit 8s ease-in-out infinite",
+      }
     },
   },
   plugins: [],
