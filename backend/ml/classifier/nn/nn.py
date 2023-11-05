@@ -5,6 +5,7 @@ from tensorflow import keras
 '''
 *TO-DO LIST*
     - implement regularisation
+    - move input shapes into this class from service
 '''
 
 
