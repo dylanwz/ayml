@@ -1,23 +1,50 @@
-import Image from 'next/image'
+import Image from "next/image";
+import diver from "../assets/diver.svg";
 
 export default function Home() {
   return (
-    <div className="flex flex-col w-screen h-screen gap-24 justify-center items-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-aymlBlue to-slate-700">
-      <span className="mt-20 text-white font-bold text-4xl text-center">Neural Networks<br></br>As You (Machine) Learn</span>
-      <div className="flex justify-center items-center">
+    <div className="w-screen h-screen bg-black bg-center bg-contain bg-no-repeat bg-[url('../assets/land.png')]">
+
+      {/* Navbar */}
+      <div> 
+      
+      </div>
+
+      {/* Hero Container */}
+      <div className="flex flex-col h-full py-24 items-center justify-between">
+
+        {/* Line */}
+        <div className="inline-flex items-center justify-center w-3/4">
+          <hr className="w-full h-[1px] my-8 bg-opacity-0 bg-slate-900 rounded"/>
+        </div>
         
-        {/* Neuron Element */}
-        <div className="rounded-full w-80 h-80 border border-white animate-orbit">
-          <div className="absolute -top-4 left-36 rounded-full w-8 h-8 border border-aymlYellow animate-fastOrbit">
-            <div className="relative top-8 left-16 rounded-full w-4 h-4 bg-aymlYellow"/>
+        {/* Hero Text */}
+        <div className="flex items-center justify-center h-full w-full">
+          <span className="text-9xl text-white">a y m l</span>
+          <div className="absolute transform translate-x-8 rotate-180">
+            <Image 
+              src={diver}
+              width={300}
+              height={300}
+              alt={"landing page diver"}
+            />
           </div>
         </div>
-        <div className="absolute rounded-full w-80 h-80 border-2 border-aymlYellow border-t-transparent border-b-transparent animate-ellipsicalRotate"/>
-        {/* Button */}
-        <a href="/architecture" className="absolute py-2 px-4 rounded-full bg-slate-700 hover:bg-slate-800 text-white font-bold animate-bounce">
-          <span>Select Architecture</span>
-        </a>
+
+        {/* Hero Button */}
+        <div className="inline-flex items-center justify-between w-3/4 gap-16">
+            <div className="w-1/3">
+              <hr className="w-full h-[1px] my-8 bg-opacity-0 bg-slate-900 rounded"/>
+            </div>
+            <a href="/architecture" className="p-4 bg-white hover:bg-slate-300 rounded-tl-3xl rounded-br-3xl text-center">
+                <span className="text-black text-sm">EXPLORE<br/>ARCHITECTURES</span>
+            </a>
+            <div className="w-1/3">
+              <hr className="w-full h-[1px] my-8 bg-opacity-0 bg-slate-900 rounded"/>
+            </div>
+        </div>
+
       </div>
-    </div>      
+    </div>     
   )
 }
