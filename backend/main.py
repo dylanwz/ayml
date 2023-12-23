@@ -2,7 +2,7 @@ from typing import Union
 from fastapi import FastAPI
 
 from models.INetwork import *
-from ml.classifier.nn import *
+# from ml.classifier.nn import *
 app = FastAPI()
 
 
