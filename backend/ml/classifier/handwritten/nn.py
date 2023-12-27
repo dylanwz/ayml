@@ -17,10 +17,7 @@ class Neuron:
     inputVal = None
     outputVal = None
 
-    # See `backprop()`; we use the distributive property of derivatives, i.e. for n > 0
-    #                   dC/dW = (∂C/da0,0 * ∂a0/∂z0,0 * ... * ∂a(n-1),m/∂zn * ∂z/∂W) + ... +
-    #                           (∂C/∂a0,1 * ∂a0/∂z0,1 * ... * ∂a(n-1),(m+1)/∂z * ∂z/∂W)_n + etc.
-    #                         = ∂/∂a0,0(...) + ∂/∂z0,1(...) + ∂/∂a0,1(...) + etc.  
+    # See `backprop()`; we use the distributive property of derivatives
     inputDelta = 0
     outputDelta = 0
     accDelta = 0
@@ -84,7 +81,7 @@ def buildNetwork(networkShape, activation, outputActivation, regularisation,
     network.append(currLayer)
 
     # Build the hidden layers
-    for i in range(1, networkShape.length-1):
+    for i in range(1, len(networkShape)-1):
         currLayer = []
         for j in range(0, networkShape[i]):
             currNeuron = Neuron(str(id), activation, initZero); id += 1
@@ -119,18 +116,18 @@ This function modifies the internal state of the network.
 """
 def forwardProp(network, inputs):
     inputLayer = network[0]
-    if inputs.length != inputLayer.length:
+    if len(inputs) != len(inputLayer):
         raise Exception("Size incompatibility between network and inputs!")
     
     # Feed in the inputs
-    for i in range(0, inputs.length):
+    for i in range(0, len(inputs)):
         inputNeuron = inputLayer[i]
         inputNeuron.outputVal = inputs[i]
 
     # Propagate the input
-    for i in range(1, network.length):
+    for i in range(1, len(network)):
         currLayer = network[i]
-        for j in range(0, currLayer.length):
+        for j in range(0, len(currLayer)):
             currLayer[j].update()
     
     return network[-1]
@@ -149,16 +146,16 @@ Note.   The main idea here is to use `outputDelta` to sum up chain-rule paths to
         a neuron and distributively multiplty it with ∂a(n)/∂z(n) to store the
         full path in `inputDelta`
 """
-def backProp(network, label, errorFn):
+def backProp(network, label, LossFn):
 
     # Find ∂C/∂a0
     outputLayer = network[-1]
     for i in range(0, outputLayer.size):
         outNeuron = outputLayer[i]
-        outNeuron.outputDelta = errorFn.der(outNeuron.outputVal, label)
+        outNeuron.outputDelta = LossFn.der(outNeuron.outputVal, label)
     
     # Iterate through each layer backwards
-    for i in range(network.length, -1, -1):
+    for i in range(len(network), -1, -1):
         layer = network[i]
 
         """
@@ -169,16 +166,16 @@ def backProp(network, label, errorFn):
         Note he idea is to perform this iteratively, noting that the sum up
         until ∂a(n+1)/∂z(n+1) can be substituted with n' = n+1.
         """
-        for j in range(0, layer.length):
+        for j in range(0, len(layer)):
             neuron = layer[j]
             neuron.inputDelta = neuron.outputDelta * neuron.activation.der(neuron.inputVal)
             neuron.accDelta += neuron.inputDelta
             neuron.numAccumulatedDelta += 1
 
         # Find the gradient of the weights of each wire
-        for j in range(0, layer.length):
+        for j in range(0, len(layer)):
             neuron = layer[j]
-            for k in range(0, neuron.inputs.length):
+            for k in range(0, len(neuron.inputs)):
                 wire = neuron.inputs[k]
                 if (wire.isDead): continue
                 wire.errorDelta = wire.source.outputVal * neuron.inputDelta
@@ -188,10 +185,10 @@ def backProp(network, label, errorFn):
 
         # Cumulate the chain-rule paths of influence to the next (backwards) layer
         prevLayer = network[i-1]
-        for j in range(0, prevLayer.length):
+        for j in range(0, len(prevLayer)):
             prevNeuron = prevLayer[j]
             prevNeuron.outputDelta = 0
-            for k in range(0, prevNeuron.outputs.length):
+            for k in range(0, len(prevNeuron.outputs)):
                 neuronLink = prevNeuron.outputs[k]
                 prevNeuron.outputDelta += neuronLink.weight * neuronLink.dest.inputDelta
 
@@ -202,7 +199,7 @@ def backProp(network, label, errorFn):
 Updates the parameters of a given network given the previously accumulated
 partial derivatives
 """
-def updateParams(network, learningRate, regularisationRate):
+def updateParams(network, learningRate, regLambda):
     # Ignore the input layer
     for i in range(1, network.size):
         layer = network[i]
@@ -216,20 +213,23 @@ def updateParams(network, learningRate, regularisationRate):
             neuron.accDelta = 0; neuron.numAccumulatedDelta = 0
 
             # Step the gradient of the wires feeding into this neuron
-            for k in range(0, neuron.inputs.length):
+            for k in range(0, len(neuron.inputs)):
                 wire = neuron.inputs[k]
                 if (wire.isDead): continue
-                regDelta = wire.regularisation if (wire.regularisation is not None) else 0
-                if (wire.numAccumulatedDelta <= 0): continue
+                if (wire.numAccumulatedDelta <= 0): continue 
                 wire.weight -= learningRate * (wire.accDelta / wire.numAccumulatedDelta)
 
-                # Process regularisation
-                regWeight = wire.weight - (learningRate * regularisationRate * regDelta)
-                if (wire.regularisation == RegularisationFn.L1):
-                    # For L1 regularisation, 
+                # Process regularisation; derive the penalty component of the
+                # cost w.r.t. the weight, i.e. ∂C/∂W = ∂(L+P)/∂W = ∂L/∂W + ∂P/∂W (=dP(W)) [P_W : W⊆R->R],
+                # added to desensitise the parameters (lower weight between neurons) (fixing the 'ridge').
+                regDer = wire.regularisation.der if (wire.regularisation is not None) else 0
+                regWeight = wire.weight - (learningRate * regLambda * regDer)
+                if (wire.regularisation == Regularisations.L1):
+                    # For L1 regularisation, check if the desensitisation then
+                    # crosses 0; if so, kill. (Useful for useless parameters).
                     if (wire.weight * regWeight < 0):
                         wire.weight = 0; wire.isDead = True
-                else:
+                else: # Otw for L2, 
                     wire.weight = regWeight
                 
                 wire.accDelta = 0; wire.numAccumulatedDelta = 0
