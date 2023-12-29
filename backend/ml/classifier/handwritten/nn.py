@@ -31,7 +31,7 @@ class Neuron:
         self.inputVal = self.bias
         for i in self.inputs:
             self.inputVal += i.weight * i.source.outputVal
-        self.outputVal = self.activation.output(self.inputVal)
+        self.outputVal = self.activation.out(self.inputVal)
 
 """
 A wire (or link) in the neural network. Each wire has a weight, a source neuron
