@@ -36,7 +36,7 @@ export default function Home() {
             <div className="w-1/3">
               <hr className="w-full h-[1px] my-8 bg-opacity-0 bg-slate-900 rounded"/>
             </div>
-            <a href="/architecture" className="p-4 bg-white hover:bg-slate-300 rounded-tl-3xl rounded-br-3xl text-center">
+            <a href="/build" className="p-4 bg-white hover:bg-slate-300 rounded-tl-3xl rounded-br-3xl text-center">
                 <span className="text-black text-sm">EXPLORE<br/>ARCHITECTURES</span>
             </a>
             <div className="w-1/3">
@@ -46,5 +46,5 @@ export default function Home() {
 
       </div>
     </div>     
-  )
+  );
 }

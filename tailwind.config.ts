@@ -11,9 +11,7 @@ const config: Config = {
       colors: {
         transparent: 'transparent',
         current: 'currentColor',
-        "aymlYellow": "#fca311",
-        "aymlBlue": "#14213d",
-        "aymlLightGray": "#e5e5e5",
+        "aymlBlue": "#005477",
       },
       keyframes: {
         ellipsicalRotate: {
