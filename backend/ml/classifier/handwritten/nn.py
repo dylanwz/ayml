@@ -66,18 +66,16 @@ Builds a neural network.
  :param regularization:     The regularisation function that computes a penalty
                             for a given weight (parameter) in the network. If
                             null, there will be no regularization.
- :param inputIds:           List of ids for the input neurons.
  :return:                   The network, as a 2D array of neurons
 """
-def buildNetwork(networkShape, activation, outputActivation, regularisation, 
-                 inputIds, initZero=False):
+def buildNetwork(networkShape, activation, outputActivation, regularisation, initZero=False):
     id = 1
     network = []
 
     # Build the input layer
     currLayer = []
     for i in range(0, networkShape[0]):
-        currLayer.append(Neuron(inputIds[i], activation, initZero))
+        currLayer.append(Neuron("I" + i, activation, initZero))
     network.append(currLayer)
 
     # Build the hidden layers
@@ -153,7 +151,7 @@ def backProp(network, label, lossFn):
     outputLayer = network[-1]
     for i in range(0, outputLayer.size):
         outNeuron = outputLayer[i]
-        outNeuron.outputDelta = lossFn.der(outNeuron.outputVal, label)
+        outNeuron.outputDelta = lossFn.der(outputLayer, label, i)
         totalLoss += outNeuron.outputDelta
     
     # Iterate through each layer backwards

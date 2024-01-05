@@ -1,17 +1,19 @@
+from typing import Callable, List
 from pydantic import BaseModel
+
+class Function(BaseModel):
+    out: Callable[[float], float]
+    der: Callable[[float], float]
 
 class Architecture(BaseModel):
     shape: list
     activation: str
     outputActivation: str
+    regularisation: Function
+    initZero: bool
 
-class Train(BaseModel):
+class TrainingParams(BaseModel):
+    batchSize: int
     learningRate: float
-    lossFunction: str
-    epochs: int
-    batchSize: int 
-    validationSplit: float
-
-class Network(BaseModel):
-    architecture: Architecture
-    train: Train
+    regLambda: float
+    lossFn: Function

@@ -6,20 +6,52 @@ import { PauseIcon } from "@heroicons/react/24/solid";
 import { ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import Dropdown from "../Dropdown/Dropdown";
+import { functionFactory } from "@/app/utils/functions";
 
 export default function ClassicContent() {
   const [start, setStart] = useState(false);
-  const [learningRate, setLearningRate] = useState(0.03);
-  const learningRates = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
+
+  const [shape, setShape] = useState([]);
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
   const regularisations = ["None", "L1", "L2"];
+
+  const [batchSize, setBatchSize] = useState(0);
+  const [learningRate, setLearningRate] = useState(0.03);
+  const learningRates = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
   const [regularisationRate, setRegularisationRate] = useState(0);
   const regularisationRates = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
 
+  const architecture = {
+    shape: shape,
+    activation: functionFactory(activation),
+    outputActivation: functionFactory("Activation"),
+    regularisation: functionFactory(regularisation),
+    initZero: false
+  }
+
+  const trainingParams = {
+    batchSize: batchSize,
+    learningRate: learningRate,
+    regLambda: regularisationRate,
+    lossFn: functionFactory("Square")
+  }
+
   const [epochs, setEpochs] = useState(0);
   const epochString = ('000000' + epochs).slice(-6);
+
+  const handleStart = () => {
+    setStart(!start);
+  };
+  const handleReset = () => {
+    setStart(false);
+    setEpochs(0);
+  };
+  const handleStep = () => {
+    setEpochs(epochs + 1);
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -33,16 +65,6 @@ export default function ClassicContent() {
       clearInterval(interval);
     };
   }, [start]);
-  const handleStart = () => {
-    setStart(!start);
-  };
-  const handleReset = () => {
-    setStart(false);
-    setEpochs(0);
-  }
-  const handleStep = () => {
-    setEpochs(epochs + 1);
-  }
 
   return (
     <div className="flex flex-col">

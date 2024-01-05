@@ -8,8 +8,8 @@ class Function:
 # Defined Loss Functions
 class Loss:
     SQUARE = Function(
-        lambda activation,label : 1/(len(activation)) * sum(map(lambda x,y : pow(x-y,2), activation,label)),
-        lambda activation,label,index : (2*(activation[index] - label[index]))/len(activation)
+        lambda activations,labels : 1/(len(activations)) * sum(map(lambda x,y : pow(x-y,2), activations,labels)),
+        lambda activations,labels,index : (2*(activations[index] - labels[index]))/len(activations)
     )
     
 # Defined Activation Functions

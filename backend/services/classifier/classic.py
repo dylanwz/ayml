@@ -11,7 +11,6 @@ class ClassicClassifier:
                                architecture.activation,
                                architecture.outputActivation,
                                architecture.regularisation,
-                               architecture.inputIds,
                                architecture.initZero)
         self.network = network
         self.iters = 0
