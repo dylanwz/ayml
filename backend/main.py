@@ -2,7 +2,8 @@ from typing import Union
 from fastapi import FastAPI
 
 from models.INetwork import *
-# from ml.classifier.nn import *
+from services.classifier.classic import *
+
 app = FastAPI()
 
 
@@ -10,6 +11,10 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/network/run")
-def run_network(network: Network):
-    return {"item_id": item_id, "q": q}
+@app.get("/classifier/classic/start")
+def start_network(architecture, trainingParams):
+    return {"service": ClassicClassifier(architecture, trainingParams)}
+
+@app.get("/classifier/classic/run")
+def run_network(service, label):
+    return service.tick(label)

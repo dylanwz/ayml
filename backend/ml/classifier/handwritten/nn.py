@@ -95,7 +95,7 @@ def buildNetwork(networkShape, activation, outputActivation, regularisation,
     # Build the output layer
     currLayer = []
     for i in range(0, networkShape[-1]):
-        currNeuron = Neuron(str(id), activation, initZero); id += 1
+        currNeuron = Neuron(str(id), outputActivation, initZero); id += 1
         # Build finally the last set of wires
         for j in range(0, networkShape[-2]):
             prevNeuron = network[i-1][k]; currWire = Wire(prevNeuron, currNeuron, regularisation, initZero)
@@ -146,13 +146,15 @@ Note.   The main idea here is to use `outputDelta` to sum up chain-rule paths to
         a neuron and distributively multiplty it with ∂a(n)/∂z(n) to store the
         full path in `inputDelta`
 """
-def backProp(network, label, LossFn):
+def backProp(network, label, lossFn):
 
+    totalLoss = 0
     # Find ∂C/∂a0
     outputLayer = network[-1]
     for i in range(0, outputLayer.size):
         outNeuron = outputLayer[i]
-        outNeuron.outputDelta = LossFn.der(outNeuron.outputVal, label)
+        outNeuron.outputDelta = lossFn.der(outNeuron.outputVal, label)
+        totalLoss += outNeuron.outputDelta
     
     # Iterate through each layer backwards
     for i in range(len(network), -1, -1):
@@ -193,7 +195,7 @@ def backProp(network, label, LossFn):
                 prevNeuron.outputDelta += neuronLink.weight * neuronLink.dest.inputDelta
 
 
-    return
+    return totalLoss
 
 """
 Updates the parameters of a given network given the previously accumulated
