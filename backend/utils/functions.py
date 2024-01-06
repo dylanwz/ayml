@@ -1,7 +1,7 @@
 import math
 
 class Function:
-    def __init(self, out, der):
+    def __init__(self, out, der):
         self.out = out
         self.der = der
 
@@ -53,3 +53,22 @@ class Regularisations:
         lambda slope : 1/2 * pow(slope, 2),
         lambda slope : slope
     )
+
+def functionFactory(fnString: str):
+    match fnString.upper():
+        case "SQUARE":
+            return Loss.SQUARE
+        case "TANH":
+            return Activations.TANH
+        case "SIGMOID":
+            return Activations.SIGMOID
+        case "RELU":
+            return Activations.RELU
+        case "LINEAR":
+            return Activations.LINEAR
+        case "L1":
+            return Regularisations.L1
+        case "L2":
+            return Regularisations.L2
+        case _:
+            return None

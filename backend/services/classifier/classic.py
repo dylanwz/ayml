@@ -1,16 +1,17 @@
 from models.INetwork import *
 from ml.classifier.handwritten.nn import *
+from utils.functions import *
     
 class ClassicClassifier:
-    def __init__(self, architecture: Architecture, trainingParams):
+    def __init__(self, architecture: ArchitectureParams, trainingParams: TrainingParams):
         self.batchSize = trainingParams.batchSize
         self.learningRate = trainingParams.learningRate
         self.regLambda = trainingParams.regLambda
-        self.lossFn = trainingParams.lossFn
+        self.lossFn = functionFactory(trainingParams.lossFn)
         network = buildNetwork(architecture.networkShape,
-                               architecture.activation,
-                               architecture.outputActivation,
-                               architecture.regularisation,
+                               functionFactory(architecture.activation),
+                               functionFactory(architecture.outputActivation),
+                               functionFactory(architecture.regularisation),
                                architecture.initZero)
         self.network = network
         self.iters = 0

@@ -1,6 +1,6 @@
 import random as rand
 
-from functions import *
+from utils.functions import *
 
 """
 A neuron (or a node) in the neural network. Each neuron has a state; a set of 
@@ -9,8 +9,7 @@ after each round of forward and backward propagation.
 """
 class Neuron:
     bias = 0.1
-    activation = None
-
+    activation = None  
 
     inputs = []
     outputs = []
@@ -26,6 +25,7 @@ class Neuron:
     def __init__(self, id, activation, initZero=False):
         self.id = id
         if (initZero): self.bias = 0
+        self.activation = activation
 
     def update(self):
         self.inputVal = self.bias
@@ -40,7 +40,7 @@ an error derivative w.r.t. a particular input that gets updated after each run
 of backward propagation.
 """
 class Wire:
-    weight = rand.randrange(-0.5, 0.5)
+    weight = rand.uniform(-0.5, 0.5)
 
     errorDelta = 0
     accErrorDelta = 0
@@ -52,6 +52,7 @@ class Wire:
         self.id = source.id + "->" + dest.id
         self.source = source
         self.dest = dest
+        self.regularisation = regularisation
         if (initZero): self.weight = 0
 
 """
@@ -75,7 +76,7 @@ def buildNetwork(networkShape, activation, outputActivation, regularisation, ini
     # Build the input layer
     currLayer = []
     for i in range(0, networkShape[0]):
-        currLayer.append(Neuron("I" + i, activation, initZero))
+        currLayer.append(Neuron("I"+str(i), activation, initZero))
     network.append(currLayer)
 
     # Build the hidden layers

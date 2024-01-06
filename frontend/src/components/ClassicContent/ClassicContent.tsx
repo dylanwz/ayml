@@ -1,17 +1,20 @@
 'use client'
 
+import { useEffect, useState } from "react";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import { PauseIcon } from "@heroicons/react/24/solid";
 import { ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
 import Dropdown from "../Dropdown/Dropdown";
-import { functionFactory } from "@/app/utils/functions";
+
+import { post } from "@/app/utils/request";
 
 export default function ClassicContent() {
   const [start, setStart] = useState(false);
+  const [epochs, setEpochs] = useState(0);
+  const epochString = ('000000' + epochs).slice(-6);
 
-  const [shape, setShape] = useState([]);
+  const [networkShape, setNetworkShape] = useState([4, 2, 2, 4]);
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
@@ -23,23 +26,24 @@ export default function ClassicContent() {
   const [regularisationRate, setRegularisationRate] = useState(0);
   const regularisationRates = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
 
-  const architecture = {
-    shape: shape,
-    activation: functionFactory(activation),
-    outputActivation: functionFactory("Activation"),
-    regularisation: functionFactory(regularisation),
+  const architectureParams = {
+    networkShape: networkShape,
+    activation: activation,
+    outputActivation: activation,
+    regularisation: regularisation,
     initZero: false
   }
-
   const trainingParams = {
     batchSize: batchSize,
     learningRate: learningRate,
     regLambda: regularisationRate,
-    lossFn: functionFactory("Square")
+    lossFn: "Square"
   }
+  const buildParams = {"architectureParams": architectureParams, "trainingParams": trainingParams};
 
-  const [epochs, setEpochs] = useState(0);
-  const epochString = ('000000' + epochs).slice(-6);
+  var service: any;
+  var label: number[] = [];
+  const runParams = {"service": service, "label": label};
 
   const handleStart = () => {
     setStart(!start);
@@ -48,16 +52,34 @@ export default function ClassicContent() {
     setStart(false);
     setEpochs(0);
   };
-  const handleStep = () => {
-    setEpochs(epochs + 1);
+  const handleStep = async () => {
+    tick();
+  };
+
+  const tick = async () => {
+    if (service == undefined) {
+      try {
+        const res = (await post("/classifier/classic/start", buildParams));
+        service = res.service;
+      } catch (error) {
+        console.error('Error in API request', error);
+      }
+    } else {
+      try {
+        const res = (await post("/classifier/classic/run", runParams));
+        setEpochs(res.epochs);
+      } catch (error) {
+        console.error('Error in API request', error);
+      }
+    }
   };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (start) {
-      interval = setInterval(() => {
-        setEpochs((prevEpoch) => prevEpoch + 1);
+      interval = setInterval(async () => {
+        tick();
       }, 50);
     }
 

@@ -3,7 +3,7 @@ const request = async (
     method: "GET" | "POST" | "PUT" | "DELETE",
     options?: Record<string, any>,
   ) => {
-    const baseUrl = `http://localhost:3000${url}`;
+    const baseUrl = `http://localhost:8000${url}`;
   
     const payload =
       method === "GET"
@@ -14,6 +14,7 @@ const request = async (
             method,
             headers: {
               "Content-type": "application/json",
+              "Access-Control-Allow-Origin": "http://localhost:8000"
             },
             body: JSON.stringify(options),
           };
