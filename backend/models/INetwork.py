@@ -32,19 +32,11 @@ class TrainingParams(BaseModel):
     regLambda: float
     lossFn: str
 
-class ServiceParams(BaseModel):
+class IServiceParams(BaseModel):
     architectureParams: ArchitectureParams
     trainingParams: TrainingParams
 
-class IService(BaseModel):
-    batchSize: int
-    learningRate: float
-    regLambda: float
-    lossFn: str
-    network: List[List[Neuron]]
-    iters: int
-    epochs: int
-    loss: float
-
-class Test(BaseModel):
-    one: int
+class IRunParams(BaseModel):
+    serviceID: str
+    inputs: List[float]
+    labels: List[float]

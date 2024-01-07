@@ -1,7 +1,7 @@
 from models.INetwork import *
 from ml.classifier.handwritten.nn import *
 from utils.functions import *
-    
+
 class ClassicClassifier:
     def __init__(self, architecture: ArchitectureParams, trainingParams: TrainingParams):
         self.batchSize = trainingParams.batchSize
@@ -18,7 +18,8 @@ class ClassicClassifier:
         self.epochs = 0
         self.loss = -1
 
-    def tick(self, label):
+    def tick(self, inputs, label):
+        forwardProp(self.network, inputs)
         self.loss += backProp(self.network, label, self.lossFn)
         self.iters += 1;
         if (self.iters % self.batchSize == 0): 

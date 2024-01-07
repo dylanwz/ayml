@@ -18,9 +18,16 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.post("/classifier/classic/start")
-def start_network(serviceParams: ServiceParams):
-    return {"service": ClassicClassifier(serviceParams.architectureParams, serviceParams.trainingParams)}
+def start_network(serviceParams: IServiceParams):
+    serviceID = "S"+str(len(registry))
+    registry[serviceID] = ClassicClassifier(serviceParams.architectureParams, serviceParams.trainingParams)
+    return {"serviceID": serviceID}
 
 @app.post("/classifier/classic/run")
-def run_network(service: IService, label: List[float]):
-    return service.tick(label)
+def run_network(runParams: IRunParams):
+    service = registry[runParams.serviceID]
+    service.tick(runParams.inputs, runParams.labels)
+    return {"epochs": service.epochs, "loss": service.loss}
+
+# Jank solution for now
+registry = {}

@@ -8,24 +8,21 @@ values, i.e. input, output, and corresponding derivatives (deltas), that change
 after each round of forward and backward propagation.
 """
 class Neuron:
-    bias = 0.1
-    activation = None  
-
-    inputs = []
-    outputs = []
-    inputVal = None
-    outputVal = None
-
-    # See `backprop()`; we use the distributive property of derivatives
-    inputDelta = 0
-    outputDelta = 0
-    accDelta = 0
-    numAccumulatedDelta = 0
-
     def __init__(self, id, activation, initZero=False):
         self.id = id
-        if (initZero): self.bias = 0
         self.activation = activation
+        self.bias = 0 if (initZero) else 0.1
+
+        self.inputs = []
+        self.outputs = []
+        self.inputVal = None
+        self.outputVal = None
+
+        # See `backprop()`; we use the distributive property of derivatives
+        self.inputDelta = 0
+        self.outputDelta = 0
+        self.accDelta = 0
+        self.numAccumulatedDelta = 0
 
     def update(self):
         self.inputVal = self.bias
@@ -39,21 +36,17 @@ and a destination neuron. It also, similar to a neuron, has an internal state;
 an error derivative w.r.t. a particular input that gets updated after each run
 of backward propagation.
 """
-class Wire:
-    weight = rand.uniform(-0.5, 0.5)
-
-    errorDelta = 0
-    accErrorDelta = 0
-    numAccumulatedDelta = 0
-
-    regularisation = None
-    
+class Wire:    
     def __init__(self, source, dest, regularisation, initZero=False):
         self.id = source.id + "->" + dest.id
         self.source = source
         self.dest = dest
         self.regularisation = regularisation
-        if (initZero): self.weight = 0
+        self.weight = 0 if (initZero) else rand.uniform(-0.5, 0.5)
+
+        self.errorDelta = 0
+        self.accErrorDelta = 0
+        self.numAccumulatedDelta = 0
 
 """
 Builds a neural network.
@@ -70,7 +63,6 @@ Builds a neural network.
  :return:                   The network, as a 2D array of neurons
 """
 def buildNetwork(networkShape, activation, outputActivation, regularisation, initZero=False):
-    id = 1
     network = []
 
     # Build the input layer
@@ -80,24 +72,28 @@ def buildNetwork(networkShape, activation, outputActivation, regularisation, ini
     network.append(currLayer)
 
     # Build the hidden layers
+    id = 1
     for i in range(1, len(networkShape)-1):
         currLayer = []
-        for j in range(0, networkShape[i]):
+        for _ in range(0, networkShape[i]):
             currNeuron = Neuron(str(id), activation, initZero); id += 1
             # Build the wires from the previous layer to this layer
             for k in range(0, networkShape[i-1]):
-                prevNeuron = network[i-1][k]; currWire = Wire(prevNeuron, currNeuron, regularisation, initZero)
+                prevNeuron = network[i-1][k]
+                currWire = Wire(prevNeuron, currNeuron, regularisation, initZero)
                 currNeuron.inputs.append(currWire); prevNeuron.outputs.append(currWire)
             currLayer.append(currNeuron)
         network.append(currLayer)
 
     # Build the output layer
+    id = 1
     currLayer = []
     for i in range(0, networkShape[-1]):
-        currNeuron = Neuron(str(id), outputActivation, initZero); id += 1
+        currNeuron = Neuron("O"+str(id), outputActivation, initZero); id += 1
         # Build finally the last set of wires
         for j in range(0, networkShape[-2]):
-            prevNeuron = network[i-1][k]; currWire = Wire(prevNeuron, currNeuron, regularisation, initZero)
+            prevNeuron = network[-1][j]
+            currWire = Wire(prevNeuron, currNeuron, regularisation, initZero)
             currNeuron.inputs.append(currWire); prevNeuron.outputs.append(currWire)
         currLayer.append(currNeuron)
     network.append(currLayer)
@@ -150,9 +146,9 @@ def backProp(network, label, lossFn):
     totalLoss = 0
     # Find ∂C/∂a0
     outputLayer = network[-1]
-    for i in range(0, outputLayer.size):
+    for i in range(0, len(outputLayer)):
         outNeuron = outputLayer[i]
-        outNeuron.outputDelta = lossFn.der(outputLayer, label, i)
+        outNeuron.outputDelta = lossFn.der(outNeuron.outputVal, label[i], len(outputLayer))
         totalLoss += outNeuron.outputDelta
     
     # Iterate through each layer backwards
@@ -205,7 +201,6 @@ def updateParams(network, learningRate, regLambda):
     for i in range(1, network.size):
         layer = network[i]
         
-        
         for j in range(0, layer.size):
             # Step the bias
             neuron = layer[j]
@@ -236,3 +231,11 @@ def updateParams(network, learningRate, regLambda):
                 wire.accDelta = 0; wire.numAccumulatedDelta = 0
     
     return
+
+def printNetwork(network):
+    for i in range(0, len(network)):
+        layer = network[i]
+        for j in range(0, len(layer)):
+            neuron = network[i][j]
+            for k in range(0, len(neuron.outputs)):
+                print(f"Neuron: {neuron.id}, {neuron.outputs[k].id}")

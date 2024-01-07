@@ -14,13 +14,13 @@ export default function ClassicContent() {
   const [epochs, setEpochs] = useState(0);
   const epochString = ('000000' + epochs).slice(-6);
 
-  const [networkShape, setNetworkShape] = useState([4, 2, 2, 4]);
+  const [networkShape, setNetworkShape] = useState([2, 2, 2, 2]);
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
   const regularisations = ["None", "L1", "L2"];
 
-  const [batchSize, setBatchSize] = useState(0);
+  const [batchSize, setBatchSize] = useState(10);
   const [learningRate, setLearningRate] = useState(0.03);
   const learningRates = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
   const [regularisationRate, setRegularisationRate] = useState(0);
@@ -39,11 +39,10 @@ export default function ClassicContent() {
     regLambda: regularisationRate,
     lossFn: "Square"
   }
-  const buildParams = {"architectureParams": architectureParams, "trainingParams": trainingParams};
-
-  var service: any;
-  var label: number[] = [];
-  const runParams = {"service": service, "label": label};
+  
+  var serviceID: string = "-1";
+  var inputs: number[] = [0.5,0.5,0.5,0.5];
+  var labels: number[] = [0.0,0.0,0.0,0.0];
 
   const handleStart = () => {
     setStart(!start);
@@ -53,19 +52,23 @@ export default function ClassicContent() {
     setEpochs(0);
   };
   const handleStep = async () => {
-    tick();
+    if (serviceID === "-1") tick().then(() => tick);
+    else tick();
   };
 
   const tick = async () => {
-    if (service == undefined) {
+    if (serviceID === "-1") {
       try {
+        const buildParams = {"architectureParams": architectureParams, "trainingParams": trainingParams};
         const res = (await post("/classifier/classic/start", buildParams));
-        service = res.service;
+        serviceID = res.serviceID;
       } catch (error) {
         console.error('Error in API request', error);
       }
     } else {
       try {
+        const runParams = {"serviceID": serviceID, "inputs": inputs, "labels": labels};
+        console.log(runParams)
         const res = (await post("/classifier/classic/run", runParams));
         setEpochs(res.epochs);
       } catch (error) {
