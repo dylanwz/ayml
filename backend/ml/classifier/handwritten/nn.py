@@ -44,9 +44,11 @@ class Wire:
         self.regularisation = regularisation
         self.weight = 0 if (initZero) else rand.uniform(-0.5, 0.5)
 
-        self.errorDelta = 0
-        self.accErrorDelta = 0
+        self.lossDelta = 0
+        self.accDelta = 0
         self.numAccumulatedDelta = 0
+
+        self.isDead = False
 
 """
 Builds a neural network.
@@ -152,7 +154,7 @@ def backProp(network, label, lossFn):
         totalLoss += outNeuron.outputDelta
     
     # Iterate through each layer backwards
-    for i in range(len(network), -1, -1):
+    for i in range(len(network) - 1, 0, -1):
         layer = network[i]
 
         """
@@ -175,8 +177,8 @@ def backProp(network, label, lossFn):
             for k in range(0, len(neuron.inputs)):
                 wire = neuron.inputs[k]
                 if (wire.isDead): continue
-                wire.errorDelta = wire.source.outputVal * neuron.inputDelta
-                wire.accErrorDelta += wire.errorDelta; wire.numAccumulatedDelta += 1
+                wire.lossDelta = wire.source.outputVal * neuron.inputDelta
+                wire.accDelta += wire.lossDelta; wire.numAccumulatedDelta += 1
         
         if (i == 1): continue
 
@@ -198,10 +200,10 @@ partial derivatives
 """
 def updateParams(network, learningRate, regLambda):
     # Ignore the input layer
-    for i in range(1, network.size):
+    for i in range(1, len(network)):
         layer = network[i]
         
-        for j in range(0, layer.size):
+        for j in range(0, len(layer)):
             # Step the bias
             neuron = layer[j]
             if (neuron.numAccumulatedDelta <= 0): continue

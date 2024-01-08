@@ -12,9 +12,10 @@ import { post } from "@/app/utils/request";
 export default function ClassicContent() {
   const [start, setStart] = useState(false);
   const [epochs, setEpochs] = useState(0);
+  const [serviceID, setServiceID] = useState("-1")
   const epochString = ('000000' + epochs).slice(-6);
 
-  const [networkShape, setNetworkShape] = useState([2, 2, 2, 2]);
+  const [networkShape, setNetworkShape] = useState([4, 2, 2, 4]);
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
@@ -40,7 +41,6 @@ export default function ClassicContent() {
     lossFn: "Square"
   }
   
-  var serviceID: string = "-1";
   var inputs: number[] = [0.5,0.5,0.5,0.5];
   var labels: number[] = [0.0,0.0,0.0,0.0];
 
@@ -49,11 +49,15 @@ export default function ClassicContent() {
   };
   const handleReset = () => {
     setStart(false);
+    setServiceID("-1")
     setEpochs(0);
   };
   const handleStep = async () => {
-    if (serviceID === "-1") tick().then(() => tick);
-    else tick();
+    if (serviceID === "-1") {
+      tick().then(() => tick);
+    } else {
+      tick();
+    }
   };
 
   const tick = async () => {
@@ -61,14 +65,14 @@ export default function ClassicContent() {
       try {
         const buildParams = {"architectureParams": architectureParams, "trainingParams": trainingParams};
         const res = (await post("/classifier/classic/start", buildParams));
-        serviceID = res.serviceID;
+        setServiceID(res.serviceID);
       } catch (error) {
         console.error('Error in API request', error);
       }
     } else {
       try {
+        console.log(serviceID)
         const runParams = {"serviceID": serviceID, "inputs": inputs, "labels": labels};
-        console.log(runParams)
         const res = (await post("/classifier/classic/run", runParams));
         setEpochs(res.epochs);
       } catch (error) {

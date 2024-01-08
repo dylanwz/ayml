@@ -21,7 +21,7 @@ class ClassicClassifier:
     def tick(self, inputs, label):
         forwardProp(self.network, inputs)
         self.loss += backProp(self.network, label, self.lossFn)
-        self.iters += 1;
+        self.iters += 1
         if (self.iters % self.batchSize == 0): 
             updateParams(self.network, self.learningRate, self.regLambda)
             self.epochs += 1

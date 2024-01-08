@@ -15,8 +15,8 @@ class Loss:
 # Defined Activation Functions
 class Activations:
     TANH = Function(
-        lambda activation : math.tahn(activation),
-        lambda val : 1 - pow(math.tahn(val), 2)
+        lambda activation : math.tanh(activation),
+        lambda val : 1 - pow(math.tanh(val), 2)
     )
 
     RELU = Function(
