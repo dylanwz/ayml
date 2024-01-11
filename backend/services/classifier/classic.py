@@ -19,8 +19,12 @@ class ClassicClassifier:
         self.loss = -1
 
     def tick(self, inputs, label):
+        for i in range(0, self.batchSize):
+            self.unitTick(inputs, label)
+
+    def unitTick(self, inputs, label):
         forwardProp(self.network, inputs)
-        self.loss += backProp(self.network, label, self.lossFn)
+        self.loss = backProp(self.network, label, self.lossFn)
         self.iters += 1
         if (self.iters % self.batchSize == 0): 
             updateParams(self.network, self.learningRate, self.regLambda)

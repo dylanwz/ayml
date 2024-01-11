@@ -1,5 +1,5 @@
 import Image from "next/image";
-import diver from "../assets/diver.svg";
+import diver from "@/assets/diver.svg";
 
 export default function Home() {
   return (
