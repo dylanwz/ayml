@@ -1,16 +1,16 @@
 from typing import Callable, List
 from pydantic import BaseModel
 
-class Wire(BaseModel):
+class IWire(BaseModel):
     weight: float
     errorDelta: float
     accErrorDelta: float
     regularisation: Callable
 
-class Neuron(BaseModel):
+class INeuron(BaseModel):
     bias: float
-    inputs: List[Wire]
-    outputs: List[Wire]
+    inputs: List[IWire]
+    outputs: List[IWire]
     inputVal: float
     outputVal: float
     intputDelta: float
@@ -19,24 +19,23 @@ class Neuron(BaseModel):
     numAccumulatedDelta: float
     update: Callable
 
-class ArchitectureParams(BaseModel):
+class IArchitecture(BaseModel):
     networkShape: List[int]
     activation: str
     outputActivation: str
     regularisation: str
     initZero: bool
 
-class TrainingParams(BaseModel):
+class ITraining(BaseModel):
     batchSize: int
     learningRate: float
     regLambda: float
     lossFn: str
 
-class IServiceParams(BaseModel):
-    architectureParams: ArchitectureParams
-    trainingParams: TrainingParams
+class IBuildParams(BaseModel):
+    architectureParams: IArchitecture
+    trainingParams: ITraining
 
 class IRunParams(BaseModel):
     serviceID: str
-    inputs: List[float]
-    labels: List[float]
+    dataspace: str

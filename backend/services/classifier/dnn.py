@@ -1,9 +1,9 @@
 from models.INetwork import *
-from ml.classifier.handwritten.nn import *
+from backend.ml.classifier.dnn.dnn import *
 from utils.functions import *
 
 class ClassicClassifier:
-    def __init__(self, architecture: ArchitectureParams, trainingParams: TrainingParams):
+    def __init__(self, architecture: IArchitecture, trainingParams: ITraining):
         self.batchSize = trainingParams.batchSize
         self.learningRate = trainingParams.learningRate
         self.regLambda = trainingParams.regLambda

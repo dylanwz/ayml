@@ -6,11 +6,13 @@ import { PlayIcon } from "@heroicons/react/24/solid";
 import { PauseIcon } from "@heroicons/react/24/solid";
 import { ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
 import Dropdown from "@/components/Dropdown/Dropdown";
+import Textform from "@/components/Textform/Textform";
 import Image from "next/image";
 import MNISTIcon from "@/assets/MNISTIcon.png";
 
-import { post } from "@/app/utils/request";
-import Textform from "@/components/Textform/Textform";
+import { IBuildRes, IRunRes } from "@/app/types/INetwork";
+import { buildShape, startNetwork, runNetwork } from "@/app/utils/networkRequest";
+
 
 export default function ClassicContent() {
   const [start, setStart] = useState(false);
@@ -19,8 +21,10 @@ export default function ClassicContent() {
   const [serviceID, setServiceID] = useState("-1")
   const epochString = ('000000' + epochs).slice(-6);
 
-  const [dataset, setDataset] = useState("MNIST")
-  const [networkShape, setNetworkShape] = useState([4, 2, 2, 4]);
+  const [dataspace, setDataspace] = useState("MNIST")
+  const [networkShape, setNetworkShape] = useState([784, 10]);
+  const [numHiddenLayers, setNumHiddenLayers] = useState(1);
+  const [numHiddenNeurons, setNumHiddenNeurons] = useState(128);
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
@@ -33,7 +37,7 @@ export default function ClassicContent() {
   const regularisationRates = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
 
   const architectureParams = {
-    networkShape: networkShape,
+    networkShape: buildShape(networkShape, numHiddenLayers, numHiddenNeurons),
     activation: activation,
     outputActivation: activation,
     regularisation: regularisation,
@@ -45,9 +49,6 @@ export default function ClassicContent() {
     regLambda: regularisationRate,
     lossFn: "Square"
   }
-  
-  var inputs: number[] = [0.5,0.5,0.5,0.5];
-  var labels: number[] = [0.0,0.0,0.0,0.0];
 
   const handleStart = () => {
     setStart(!start);
@@ -59,27 +60,32 @@ export default function ClassicContent() {
   };
   const handleStep = async () => {
     if (serviceID === "-1") {
-      tick().then(() => tick);
+      tick().then(() => tick());
     } else {
       tick();
     }
   };
 
+  const onStartTick = (res: IBuildRes) => {
+    setServiceID(res.serviceID);
+    console.log(serviceID)
+  }
+
+  const onRunTick = (res: IRunRes) => {
+    setEpochs(res.epochs);
+    setLoss(res.loss);
+  }
+
   const tick = async () => {
     if (serviceID === "-1") {
       try {
-        const buildParams = {"architectureParams": architectureParams, "trainingParams": trainingParams};
-        const res = (await post("/classifier/classic/start", buildParams));
-        setServiceID(res.serviceID);
+        startNetwork(architectureParams, trainingParams, onStartTick)
       } catch (error) {
         console.error('Error in API request', error);
       }
     } else {
       try {
-        const runParams = {"serviceID": serviceID, "inputs": inputs, "labels": labels};
-        const res = (await post("/classifier/classic/run", runParams));
-        setEpochs(res.epochs);
-        setLoss(res.loss);
+        runNetwork(serviceID, dataspace, onRunTick);
       } catch (error) {
         console.error('Error in API request', error);
       }
@@ -181,7 +187,7 @@ export default function ClassicContent() {
           <span className="text-xs">Which dataset do you <br/> want to use?</span>
           {/* Dataset Options */}
           <div className="flex flex-row">
-            <div className={`w-10 h-10 ${dataset === "MNIST" ? "border border-black" : ""} hover:border hover:border-black`}>
+            <div className={`w-10 h-10 ${dataspace === "MNIST" ? "border border-black" : ""} hover:border hover:border-black`}>
               <Image
                 src={MNISTIcon}
                 width={40}
@@ -193,11 +199,11 @@ export default function ClassicContent() {
           <div className="flex flex-col w-full text-xs text-gray-400">
             <div className="flex flex-row justify-between">
               <span>Input Layer:</span>
-              <span>{dataset === "MNIST" ? "784" : "-"}</span>
+              <span>{networkShape[0]}</span>
             </div>
             <div className="flex flex-row justify-between">
               <span>Output Layer:</span>
-              <span>{dataset === "MNIST" ? "10" : "-"}</span>
+              <span>{networkShape[networkShape.length - 1]}</span>
             </div>
           </div>
           {/* Batch Size Options */}
@@ -222,7 +228,7 @@ export default function ClassicContent() {
                 defaultValue={"1"}
                 passCondition={(s: string) => /^\d*$/.test(s)}
                 inputModifier={(s: string) => parseInt(s) > 100 ? "100" : s}
-                onChange={() => {return}}
+                onChange={(input) => setNumHiddenLayers(parseInt(input))}
               />
             </div>
             <div className="flex flex-row justify-between text-xs">
@@ -231,7 +237,7 @@ export default function ClassicContent() {
                 defaultValue={"128"}
                 passCondition={(s: string) => /^\d*$/.test(s)}
                 inputModifier={(s: string) => parseInt(s) > 100 ? "100" : s}
-                onChange={() => {return}}
+                onChange={(input) => setNumHiddenNeurons(parseInt(input))}
               />
             </div>
           </div>

@@ -144,14 +144,14 @@ Note.   The main idea here is to use `outputDelta` to sum up chain-rule paths to
         full path in `inputDelta`
 """
 def backProp(network, label, lossFn):
-
     totalLoss = 0
-    # Find ∂C/∂a0
+    # Find ∂C/∂a0 >> outputDelta for each outputNeuron
     outputLayer = network[-1]
-    for i in range(0, len(outputLayer)):
+    length = len(outputLayer)
+    for i in range(0, length):
         outNeuron = outputLayer[i]
-        outNeuron.outputDelta = lossFn.der(outNeuron.outputVal, label[i], len(outputLayer))
-        totalLoss += outNeuron.outputDelta
+        outNeuron.outputDelta = lossFn.der(outNeuron.outputVal, label[i], length)
+        totalLoss += lossFn.out(outNeuron.outputVal, label[i], length)
     
     # Iterate through each layer backwards
     for i in range(len(network) - 1, 0, -1):
@@ -162,7 +162,7 @@ def backProp(network, label, lossFn):
            [[∂C/∂m] * [∂am/∂zm * ... * ∂a(n+1)/∂z(n+1) * ∂z(n+1)/∂an]] * [∂a(n)/∂z(n)]
         up to the total input z of a neuron in the nth layer.
         
-        Note he idea is to perform this iteratively, noting that the sum up
+        Note the idea is to perform this iteratively, noting that the sum up
         until ∂a(n+1)/∂z(n+1) can be substituted with n' = n+1.
         """
         for j in range(0, len(layer)):
@@ -170,6 +170,7 @@ def backProp(network, label, lossFn):
             neuron.inputDelta = neuron.outputDelta * neuron.activation.der(neuron.inputVal)
             neuron.accDelta += neuron.inputDelta
             neuron.numAccumulatedDelta += 1
+            #if (neuron.accDelta > 0): print(f"Neuron AccDelta: {neuron.accDelta}")
 
         # Find the gradient of the weights of each wire
         for j in range(0, len(layer)):
@@ -179,6 +180,7 @@ def backProp(network, label, lossFn):
                 if (wire.isDead): continue
                 wire.lossDelta = wire.source.outputVal * neuron.inputDelta
                 wire.accDelta += wire.lossDelta; wire.numAccumulatedDelta += 1
+                #print(f"Wire AccDelta: {wire.accDelta}")  
         
         if (i == 1): continue
 
@@ -188,11 +190,11 @@ def backProp(network, label, lossFn):
             prevNeuron = prevLayer[j]
             prevNeuron.outputDelta = 0
             for k in range(0, len(prevNeuron.outputs)):
-                neuronLink = prevNeuron.outputs[k]
-                prevNeuron.outputDelta += neuronLink.weight * neuronLink.dest.inputDelta
-
+                wire = prevNeuron.outputs[k]
+                prevNeuron.outputDelta += wire.weight * wire.dest.inputDelta
 
     return totalLoss
+    
 
 """
 Updates the parameters of a given network given the previously accumulated
@@ -214,7 +216,7 @@ def updateParams(network, learningRate, regLambda):
             for k in range(0, len(neuron.inputs)):
                 wire = neuron.inputs[k]
                 if (wire.isDead): continue
-                if (wire.numAccumulatedDelta <= 0): continue 
+                if (wire.numAccumulatedDelta <= 0): continue
                 wire.weight -= learningRate * (wire.accDelta / wire.numAccumulatedDelta)
 
                 # Process regularisation; derive the penalty component of the
@@ -231,13 +233,39 @@ def updateParams(network, learningRate, regLambda):
                     wire.weight = regWeight
                 
                 wire.accDelta = 0; wire.numAccumulatedDelta = 0
-    
+
     return
 
-def printNetwork(network):
+def printNetwork(network, limit=50):
+    count = 0
+    for i in range(1, len(network)):
+        layer = network[i]
+        for j in range(0, len(layer)):
+            neuron = network[i][j]
+            # if (neuron.bias != 0.0 and count < limit):
+            #     print(f"Neuron: {neuron.bias}")
+            #     count += 1
+            if (neuron.outputVal != 0.0):
+                print(f"Neuron Out: {neuron.outputVal}")
+                count += 1
+            # for k in range(0, len(neuron.outputs)):
+            #     if (neuron.outputs[k].weight != 0.0 and count < limit):
+            #         print(f"Wire: {neuron.outputs[k].weight}")
+            #         count += 1
+                
+def printWeights(network, limit=50):
+    count = 0
     for i in range(0, len(network)):
         layer = network[i]
         for j in range(0, len(layer)):
             neuron = network[i][j]
+            # if (neuron.bias != 0.0 and count < limit):
+            #     print(f"Neuron: {neuron.bias}")
+            #     count += 1
+            # if (neuron.outputVal != 0.0):
+            #     print(f"Neuron Out: {neuron.outputVal}")
+            #     count += 1
             for k in range(0, len(neuron.outputs)):
-                print(f"Neuron: {neuron.id}, {neuron.outputs[k].id}")
+                if (neuron.outputs[k].weight != 0.0 and count < limit):
+                    print(f"Wire {neuron.outputs[k].id}: {neuron.outputs[k].weight}")
+                    count += 1

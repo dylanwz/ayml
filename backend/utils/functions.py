@@ -1,4 +1,4 @@
-import math
+import numpy as np
 
 class Function:
     def __init__(self, out, der):
@@ -8,25 +8,25 @@ class Function:
 # Defined Loss Functions
 class Loss:
     SQUARE = Function(
-        lambda activations,labels : 1/(len(activations)) * sum(map(lambda x,y : pow(x-y,2), activations,labels)),
-        lambda activation,label,size : (2*(activation - label))/size
+        lambda activation,label,size : 1.0/size * pow(activation-label, 2.0),
+        lambda activation,label,size : (2.0*(activation - label))/size
     )
     
 # Defined Activation Functions
 class Activations:
     TANH = Function(
-        lambda activation : math.tanh(activation),
-        lambda val : 1 - pow(math.tanh(val), 2)
+        lambda activation : np.tanh(activation),
+        lambda val : 1 - pow(np.tanh(val), 2)
     )
 
     RELU = Function(
-        lambda activation : math.max(0, activation),
-        lambda val : 0 if val <= 0 else 1
+        lambda activation : max(0.0, activation),
+        lambda val : 0.0 if val <= 0.0 else 1.0
     )
 
     SIGMOID = Function(
-        lambda activation : 1 / (1 + math.exp(-1 * activation)),
-        lambda val : 1 - pow(1 / (1 + math.exp(-1 * val)), 2)
+        lambda activation : 1 / (1 + np.exp(-1 * activation)),
+        lambda val : 1 - pow(1 / (1 + np.exp(-1 * val)), 2)
     )
 
     LINEAR = Function(
