@@ -5,6 +5,8 @@ import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import { PauseIcon } from "@heroicons/react/24/solid";
 import { ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/solid";
+import { MinusIcon } from "@heroicons/react/24/solid";
 import Dropdown from "@/components/Dropdown/Dropdown";
 import Textform from "@/components/Textform/Textform";
 import Image from "next/image";
@@ -14,17 +16,16 @@ import { IBuildRes, IRunRes } from "@/app/types/INetwork";
 import { buildShape, startNetwork, runNetwork } from "@/app/utils/networkRequest";
 
 
-export default function ClassicContent() {
+export default function VisualDNNContent() {
   const [start, setStart] = useState(false);
-  const [epochs, setEpochs] = useState(0);
   const [loss, setLoss] = useState(0.5);
-  const [serviceID, setServiceID] = useState("-1")
+  const [epochs, setEpochs] = useState(0);
   const epochString = ('000000' + epochs).slice(-6);
+  const [serviceID, setServiceID] = useState("-1")
 
-  const [dataspace, setDataspace] = useState("MNIST")
-  const [networkShape, setNetworkShape] = useState([784, 10]);
-  const [numHiddenLayers, setNumHiddenLayers] = useState(1);
-  const [numHiddenNeurons, setNumHiddenNeurons] = useState(128);
+  const [dataspace, setDataspace] = useState("Circles")
+  const [inputShape, setInputShape] = useState(2);
+  const [hiddenShape, setHiddenShape] = useState([4,2])
   const [activation, setActivation] = useState("Tanh");
   const activations = ["ReLU", "Tanh", "Sigmoid", "Linear"];
   const [regularisation, setRegularisation] = useState("None");
@@ -37,7 +38,10 @@ export default function ClassicContent() {
   const regularisationRates = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10];
 
   const architectureParams = {
-    networkShape: buildShape(networkShape, numHiddenLayers, numHiddenNeurons),
+    networkShape: buildShape({
+      "inputShape": inputShape,
+      "hiddenShape": hiddenShape,
+      "outputShape": 1}),
     activation: activation,
     outputActivation: activation,
     regularisation: regularisation,
@@ -74,6 +78,35 @@ export default function ClassicContent() {
   const onRunTick = (res: IRunRes) => {
     setEpochs(res.epochs);
     setLoss(res.loss);
+  }
+
+  const onAddLayer = () => {
+    if (hiddenShape.length < 6) {
+      const newShape = [...hiddenShape];
+      newShape.push(2);
+      setHiddenShape(newShape);
+    }
+  }
+  const onRemoveLayer = () => {
+    if (hiddenShape.length > 0) {
+      const newShape = [...hiddenShape];
+      newShape.pop();
+      setHiddenShape(newShape);
+    }
+  }
+  const onAddDense = (i: number) => {
+    if (hiddenShape[i] < 8) {
+      const newShape = [...hiddenShape];
+      newShape[i]++;
+      setHiddenShape(newShape);
+    }
+  }
+  const onRemoveDense = (i: number) => {
+    if (hiddenShape[i] > 1) {
+      const newShape = [...hiddenShape];
+      newShape[i]--;
+      setHiddenShape(newShape);
+    }
   }
 
   const tick = async () => {
@@ -118,7 +151,7 @@ export default function ClassicContent() {
             <button onClick={handleReset}>
               <ArrowUturnLeftIcon className="w-5 h-5 flex-shrink-0" />
             </button>
-            <button className="flex h-full aspect-square items-center justify-center rounded-full bg-aymlBlue bg-opacity-30" onClick={handleStart}>
+            <button className="flex h-full aspect-square items-center justify-center rounded-full bg-aymlBlue bg-opacity-30 hover:bg-opacity-40" onClick={handleStart}>
               {start ? <PauseIcon className="w-8 h-8" /> : <PlayIcon className="w-8 h-8" />}
             </button>
             <button onClick={handleStep}>
@@ -196,16 +229,6 @@ export default function ClassicContent() {
               />
             </div>
           </div>
-          <div className="flex flex-col w-full text-xs text-gray-400">
-            <div className="flex flex-row justify-between">
-              <span>Input Layer:</span>
-              <span>{networkShape[0]}</span>
-            </div>
-            <div className="flex flex-row justify-between">
-              <span>Output Layer:</span>
-              <span>{networkShape[networkShape.length - 1]}</span>
-            </div>
-          </div>
           {/* Batch Size Options */}
           <div className="flex flex-row justify-between w-full text-xs mt-3">
             <span>Batch Size:</span>
@@ -219,33 +242,26 @@ export default function ClassicContent() {
         </div>
 
         {/* Training Controls */}
-        <div className="flex flex-col w-2/3 items-center gap-3">
-          <span>TRAINING</span>
-          <div className="flex flex-col w-1/2 items-center gap-2">
-            <div className="flex flex-row justify-between text-xs">
-              <span>Hidden Layers:</span>
-              <Textform 
-                defaultValue={"1"}
-                passCondition={(s: string) => /^\d*$/.test(s)}
-                inputModifier={(s: string) => parseInt(s) > 100 ? "100" : s}
-                onChange={(input) => setNumHiddenLayers(parseInt(input))}
-              />
-            </div>
-            <div className="flex flex-row justify-between text-xs">
-              <span>Neurons:</span>
-              <Textform 
-                defaultValue={"128"}
-                passCondition={(s: string) => /^\d*$/.test(s)}
-                inputModifier={(s: string) => parseInt(s) > 100 ? "100" : s}
-                onChange={(input) => setNumHiddenNeurons(parseInt(input))}
-              />
+        <div className="flex flex-row w-2/3 justify-between gap-3">
+          <div className="flex flex-col items-center w-1/4">
+            <span>INPUT</span>
+          </div>
+          <div className="flex flex-col items-center w-3/4">
+            <div className="flex flex-row justify-center items-center w-full gap-2">
+                <button className="rounded-full bg-aymlBlue bg-opacity-10 hover:bg-opacity-20 w-6 h-6 p-1" onClick={onAddLayer}>
+                  <PlusIcon  />
+                </button>
+                <button className="rounded-full bg-aymlBlue bg-opacity-10 hover:bg-opacity-20 w-6 h-6 p-1" onClick={onRemoveLayer}>
+                  <MinusIcon />
+                </button>
+              <span className="pl-2">{hiddenShape.length} HIDDEN LAYERS</span>
             </div>
           </div>
         </div>
 
         {/* Results Controls */}
         <div className="flex flex-col w-1/6 items-end gap-3">
-          <span>RESULTS</span>
+          <span>OUTPUT</span>
           <div className="flex flex-col w-full text-xs items-end">
             <div className="flex flex-row w-full justify-between">
               <span>Test Loss:</span>

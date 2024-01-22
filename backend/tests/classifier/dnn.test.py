@@ -1,11 +1,13 @@
+import sys; import os; sys.path.append(os.getcwd())
+
+from models.INetwork import *
+from services.visual.dnn import *
+from utils.math import *
+from utils.functions import *
+
 from keras.datasets import mnist
 import numpy as np
 from matplotlib import pyplot
-
-from models.INetwork import *
-from backend.services.classifier.dnn import *
-from utils.math import *
-from utils.functions import *
 
 XarchitectureParams = {
     "networkShape": [784, 128, 10],
@@ -16,7 +18,7 @@ XarchitectureParams = {
 }
 
 XtrainingParams = {
-    "batchSize": 1,
+    "batchSize": 5,
     "learningRate": 0.1,
     "regLambda": 0,
     "lossFn": "square"
@@ -30,7 +32,7 @@ class DictAsObject:
 architectureParams = DictAsObject(XarchitectureParams)
 trainingParams = DictAsObject(XtrainingParams)
 
-classifier = ClassicClassifier(architectureParams, trainingParams)
+classifier = VisualDNNService(architectureParams, trainingParams)
 # printNetwork(classifier.network)
 
 # arr1 = [1,2,3]
@@ -74,5 +76,6 @@ for j in range(0, 100):
 # printWeights(classifier.network)
 print(resf)
 print(correct/total)
+print(classifier.loss)
 
 # Can provide 92% acc

@@ -1,8 +1,8 @@
 from models.INetwork import *
-from backend.ml.classifier.dnn.dnn import *
+from ml.classifier.dnn.dnn import *
 from utils.functions import *
 
-class ClassicClassifier:
+class VisualDNNService:
     def __init__(self, architecture: IArchitecture, trainingParams: ITraining):
         self.batchSize = trainingParams.batchSize
         self.learningRate = trainingParams.learningRate

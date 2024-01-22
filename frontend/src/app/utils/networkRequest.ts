@@ -1,10 +1,11 @@
 import { post } from "@/app/utils/request";
-import { IArchitecture, ITraining, IBuildParams, IRunParams, IBuildRes, IRunRes } from "@/app/types/INetwork";
+import { IShapeParams, IArchitecture, ITraining, IBuildParams, IRunParams, IBuildRes, IRunRes } from "@/app/types/INetwork";
 
-export function buildShape(shape: number[], numHiddenLayers: number, numHiddenNeurons: number) {
-  const fullShape = [...shape];
-  const hiddenShape = Array.from({length: numHiddenLayers}, () => numHiddenNeurons);
-  fullShape.splice(1,0,...hiddenShape);
+export function buildShape(shapeParams: IShapeParams) {
+  const fullShape: number[] = [];
+  fullShape.push(shapeParams.inputShape);
+  shapeParams.hiddenShape.forEach(n => fullShape.push(n));
+  fullShape.push(shapeParams.outputShape);
   return fullShape;
 }
 

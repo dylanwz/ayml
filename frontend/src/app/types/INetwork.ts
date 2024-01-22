@@ -31,3 +31,9 @@ export type IRunRes = {
   epochs: number;
   loss: number;
 }
+
+export type IShapeParams = {
+  inputShape: number;
+  hiddenShape: number[];
+  outputShape: number;
+}

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from models.INetwork import *
-from backend.services.classifier.dnn import *
+from services.visual.dnn import *
 from utils.dataspaces import *
 from utils.math import *
 
@@ -22,7 +22,7 @@ async def read_root():
 @app.post("/classifier/classic/start")
 def start_network(buildParams: IBuildParams):
     serviceID = "S"+str(len(registry))
-    registry[serviceID] = ClassicClassifier(buildParams.architectureParams, buildParams.trainingParams)
+    registry[serviceID] = VisualDNNService(buildParams.architectureParams, buildParams.trainingParams)
     return {"serviceID": serviceID}
 
 @app.post("/classifier/classic/run")

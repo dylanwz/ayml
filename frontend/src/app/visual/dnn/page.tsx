@@ -1,9 +1,9 @@
-import ClassicContent from "@/components/ClassicContent/ClassicContent";
+import VisualDNNContent from "@/components/VisualDNN/VisualDNNContent";
 
 export default function classic() {
   return (
     <div className="flex flex-col w-screen h-screen py-20">
-      <ClassicContent/>
+      <VisualDNNContent/>
     </div>
   );
 }
