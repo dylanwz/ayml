@@ -10,7 +10,7 @@ import { MinusIcon } from "@heroicons/react/24/solid";
 import Dropdown from "@/components/Dropdown/Dropdown";
 import Textform from "@/components/Textform/Textform";
 import Image from "next/image";
-import MNISTIcon from "@/assets/MNISTIcon.png";
+import NACIcon from "@/assets/NACIcon.svg";
 
 import { IBuildRes, IRunRes } from "@/app/types/INetwork";
 
@@ -21,7 +21,7 @@ export default function HomeContent() {
   const [intiatied, setInitiated] = useState(false);
 
   // Datasets
-  const datasets = ["MNIST"];
+  const datasets = ["NAC"];
   const [dataset, setDataset] = useState(datasets[0]);
 
   // Shape
@@ -199,9 +199,12 @@ export default function HomeContent() {
           <span className="text-xs">Which dataset do you <br/> want to use?</span>
           {/* Dataset Options */}
           <div className="flex flex-row">
-            <div className={`w-10 h-10 hover:border hover:border-black ${dataset === "MNIST" ? "border border-black" : ""}`}>
+            <div
+              className={`w-10 h-10 hover:border hover:border-black ${dataset === "NAC" ? "border border-black" : ""}`}
+              onClick={() => setDataset("NAC")}
+            >
               <Image
-                src={MNISTIcon}
+                src={NACIcon}
                 width={40}
                 height={40}
                 alt={"MNIST Icon"}

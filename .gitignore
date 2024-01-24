@@ -9,6 +9,9 @@ node_modules
 # testing
 /coverage
 
+# data
+*.csv
+
 # next.js
 .next/
 /out/
