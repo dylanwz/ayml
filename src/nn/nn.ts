@@ -1,4 +1,4 @@
-import * as fns from "@/nn/functions";
+import * as fns from "./functions";
 
 export class Node {
   id: string;
@@ -11,23 +11,26 @@ export class Node {
 
   // Final derivatives; `derPath` should end up as `∂a/∂z` so that `∂z/∂w` is
   //                    performed in `updateParams`
-  derPath: number;
+  derA: number;
+  derZ: number;
   accDer: number;
   numAccDer: number;
 
 
   constructor(id: string, activation: fns.Activation) {
     this.id = id;
-    
-    this.bias = 0.1;
     this.activation = activation;
     this.totalInput = 0;
     this.output = 0;
     this.inputs = [];
     this.outputs = [];
+    this.bias = 0.1;
 
-    this.derPath = 0; this.accDer = 0; this.numAccDer = 0;
+    this.derA = 0; this.derZ = 0; this.accDer = 0; this.numAccDer = 0;
+  }
 
+  initBias(bias: fns.Bias) {
+    this.bias = bias.gen(this.inputs.length);;
   }
 
   /**
@@ -52,6 +55,7 @@ export class Link {
   dest: Node;
   weight: number;
 
+  der: number;
   accDer: number;
   numAccDer: number;
 
@@ -62,7 +66,7 @@ export class Link {
     this.dest = dest;
     this.weight = Math.random() - 0.5;
 
-    this.accDer = 0; this.numAccDer = 0;
+    this.der = 0; this.accDer = 0; this.numAccDer = 0;
   }
 }
 
@@ -77,23 +81,27 @@ export function buildNetwork(
   // First build the input layer
   let inputLayer = [];
   for (let i = 0; i < shape[0]; i++) {
-    const node = new Node(String(id), activation); id++;
+    const node = new Node(String(id), activation);
+    node.initBias(fns.Bias.ZERO);
+    id++;
     inputLayer.push(node);
   }
   network.push(inputLayer);
   
   // Next build the hidden layers and output layer
-  for (let j = 1; j < shape.length; j++) {
+  for (let i = 1; i < shape.length; i++) {
     let layer = [];
-    for (let c = 0; c < shape[j]; c++) {
-      const node = new Node(String(id), j === shape.length - 1 ? outputActivation : activation); id++;
+    for (let j = 0; j < shape[i]; j++) {
+      const node = new Node(String(id), i === shape.length - 1 ? outputActivation : activation);
+      id++;
       // Links: add links between this node and each previous node
-      for (let p = 0; p < shape[j - 1]; p++) {
-        const prev = network[j - 1][p];
+      for (let k = 0; k < shape[i - 1]; k++) {
+        const prev = network[i - 1][k];
         const link = new Link(prev.id + " -> " + node.id, prev, node);
         node.inputs.push(link);
         prev.outputs.push(link);
       }
+      node.initBias(fns.Bias.HE);
       layer.push(node);
     }
     network.push(layer);
@@ -126,44 +134,60 @@ export function forwardProp(network: Node[][], inputs: number[]) {
 }
 
 export function backProp(network: Node[][], labels: number[], lossFn: fns.Loss) {
-  let totalLoss = 0;
-  
-  const outputLayer = network[network.length -1];
+  const outputLayer = network[network.length - 1];
   if (labels.length != outputLayer.length) {
     throw new Error(`Size error: incompatibility between given input size ${labels.length} and network input size ${outputLayer.length}!`);
   }
 
-  // First; compute the loss w.r.t. each output neuron
+  //    A. Compute ∂C/∂a(L), for each output neuron
   const numOutputs = outputLayer.length;
   for (let i = 0; i < numOutputs; i++) {
     const node = outputLayer[i];
     const label = labels[i];
-    node.derPath = lossFn.der(node.output, label, numOutputs) * node.activation.der(node.totalInput);
-    node.accDer += node.derPath; node.numAccDer++;
-    totalLoss += lossFn.output(node.output, label, numOutputs);
+    node.derA = lossFn.der(node.output, label, numOutputs);
   }
-  totalLoss = totalLoss / numOutputs;
 
-  // Iterate over the hidden layers backwards
-  for (let i = network.length - 2; i >= 0; i--) {
+  /**   B.  Iterate through the layers backwards, and for each node of each layer...
+   *          1)  Perform   ∂a(L)/∂z(L) = act'(z(L))      using the `derA` value stored to give `derZ`;
+   *          2)  Perform   ∂z(L)/∂W(L_{i->j}) = a(L-1)   to each weight extending into that node.
+   *          3)  Perform   Σ ( ∂z(L)/∂a(L-1) ) = W       over each node in the current layer,
+   *              and store in the next (backward) layer's nodes' `derA`.
+   *    Reset temporary `derPath` value backpropagation before each assignment.
+  */
+  for (let i = network.length - 1; i > 0; i--) {
+    
     const layer = network[i];
     for (let j = 0; j < layer.length; j++) {
       const node = layer[j];
-      let sum = 0;
-      for (let k = 0; k < node.outputs.length; k++) {
-        const link = node.outputs[k];
-        const prevNode = link.dest;
-        sum += prevNode.derPath * link.weight;
+      node.derZ = node.derA * node.activation.der(node.totalInput);
+      node.accDer += node.derZ;
+      node.numAccDer++;
+    }
 
-        link.accDer += node.output * prevNode.derPath;
+    for (let j = 0; j < layer.length; j++) {
+      const node = layer[j];
+      for (let k = 0; k < node.inputs.length; k++) {
+        const link = node.inputs[k];
+        link.der = node.derZ * link.source.output;
+        link.accDer += link.der;
         link.numAccDer++;
       }
-      node.derPath = sum * node.activation.der(node.output);
-      node.accDer += node.derPath; node.numAccDer++;
+    }
+
+    if (i === 1) {
+      continue;
+    }
+
+    const prevLayer = network[i - 1];
+    for (let j = 0; j < prevLayer.length; j++) {
+      const prevNode = prevLayer[j];
+      prevNode.derA = 0;
+      for (let k = 0; k < prevNode.outputs.length; k++) {
+        const link = prevNode.outputs[k];
+        prevNode.derA += link.dest.derZ * link.weight;
+      }
     }
   }
-
-  return totalLoss;
 }
 
 export function updateParams(network: Node[][], learningRate: number) {
@@ -172,14 +196,16 @@ export function updateParams(network: Node[][], learningRate: number) {
     for (let j = 0; j < layer.length; j++) {
       const node = layer[j];
       if (node.numAccDer > 0) {
-        node.bias -= learningRate * node.accDer / node.numAccDer;
-        node.accDer = 0; node.numAccDer = 0;
+        node.bias -= learningRate * (node.accDer / node.numAccDer);
+        node.accDer = 0;
+        node.numAccDer = 0;
       }
       for (let k = 0; k < node.inputs.length; k++) {
         const link = node.inputs[k];
         if (link.numAccDer > 0) {
-          link.weight -= learningRate * link.accDer / link.numAccDer;
-          link.accDer = 0; link.numAccDer = 0;
+          link.weight -= learningRate * (link.accDer / link.numAccDer);
+          link.accDer = 0; 
+          link.numAccDer = 0;
         }
       }
     }
