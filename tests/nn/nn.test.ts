@@ -67,28 +67,28 @@ function testForwardProp() {
   }
 }
 
-// function testBackProp() {
-//   const network = nn.buildNetwork([2,1,2], fn.Activations.RELU, fn.Activations.SIGMOID);
-//   for (let i = 0; i < 10; i++) {
-//     let node = nn.forwardProp(network, [Math.random(),Math.random()]);
-//     let nodeVals = node.map((n) => n.output);
-//     console.log(nodeVals);
-//   }
-//   nn.forwardProp(network, [1,1]);
-//   nn.backProp(network, [0,0], fn.Loss.SQUARE);
-//   for (let i = 0; i < network.length; i++) {
-//     console.log(`Layer: ${i}`);
-//     for (let j = 0; j < network[i].length; j++) {
-//       const node = network[i][j];
-//       console.log(`Node: ${node.id}, Bias: ${node.bias}, AccDer: ${node.accDer}`);
-//       if (i < network.length - 1) {
-//         for (let k = 0; k < node.outputs.length; k++) {
-//           console.log(`Link: ${node.outputs[k].id}, Weight: ${node.outputs[k].weight}, AccDer: ${node.outputs[k].accDer}`);
-//         }
-//       }
-//     }
-//   }
-// }
+function testBackProp() {
+  const network = nn.buildNetwork([2,1,2], fn.Activations.RELU, fn.Activations.SIGMOID);
+  for (let i = 0; i < 10; i++) {
+    let node = nn.forwardProp(network, [Math.random(),Math.random()]);
+    let nodeVals = node.map((n) => n.output);
+    console.log(nodeVals);
+  }
+  nn.forwardProp(network, [1,1]);
+  nn.backProp(network, [0,0], fn.Loss.SQUARE);
+  for (let i = 0; i < network.length; i++) {
+    console.log(`Layer: ${i}`);
+    for (let j = 0; j < network[i].length; j++) {
+      const node = network[i][j];
+      console.log(`Node: ${node.id}, Bias: ${node.bias}, AccDer: ${node.accDer}`);
+      if (i < network.length - 1) {
+        for (let k = 0; k < node.outputs.length; k++) {
+          console.log(`Link: ${node.outputs[k].id}, Weight: ${node.outputs[k].weight}, AccDer: ${node.outputs[k].accDer}`);
+        }
+      }
+    }
+  }
+}
 
 // function testUpdate() {
 //   const network = nn.buildNetwork([2,1,2], fn.Activations.RELU, fn.Activations.LINEAR);
@@ -115,15 +115,15 @@ function testForwardProp() {
 // }
 
 function testMNIST() {
-  const network = nn.buildNetwork([784, 128, 10], fn.Activations.RELU, fn.Activations.SIGMOID);
+  const network = nn.buildNetwork([784, 10, 10], fn.Activations.RELU, fn.Activations.SIGMOID);
   for (let i = 0; i < flattenedTrainData.length; i++) {
     console.log(`Training: ${i}`);
     nn.forwardProp(network, flattenedTrainData[i]);
     let label = [0,0,0,0,0,0,0,0,0,0];
     label[trainLabels[i]] = 1;
     nn.backProp(network, label, fn.Loss.SQUARE);
-    if ((i+1) % 5 === 0) {
-      nn.updateParams(network, 0.8);
+    if ((i+1) % 10 === 0) {
+      nn.updateParams(network, 0.1);
     }
   }
 
@@ -159,8 +159,8 @@ function testMNIST() {
   //     }
   //   }
   // }
-  // console.log(finalResu);
-  // console.log(corr/num);
+  console.log(finalResu);
+  console.log(corr/num);
 }
 
 function testMNISTGen() {
