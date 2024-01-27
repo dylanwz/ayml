@@ -211,3 +211,127 @@ export function updateParams(network: Node[][], learningRate: number) {
     }
   }
 }
+
+/**
+ * CONVOLUTION NEURAL NETWORK
+ */
+class Filter {
+  height: number;
+  width: number;
+  bias: number;
+  stride: number;
+  activation: fns.Activation;
+  kernel: number[][];
+
+  constructor(height: number, width: number, bias: number, stride: number, activation: fns.Activation) {
+    this.height = height;
+    this.width = width;
+    this.bias = bias;
+    this.stride = stride;
+    this.activation = activation;
+    this.kernel = init2DArray(height, width);
+  }
+}
+
+class Pool {
+  height: number;
+  width: number;
+  stride: number;
+
+  constructor(height: number, width: number, stride: number) {
+    this.height = height;
+    this.width = width;
+    this.stride = stride;
+  }
+}
+
+class convolutionalLayer {
+  filter: Filter;
+  pool: Pool;
+  featureMap: number[][];
+  
+  constructor(filter: Filter, pool: Pool) {
+    this.filter = filter;
+    this.pool = pool;
+    this.featureMap = [];
+  }
+
+  convolute(image: number[][]): void {
+    let featureMap = [];
+    for (let i = 0; i < image.length - this.filter.height; i++) {
+      let row = image[i];
+      let resRow = [];
+      for (let j = 0; j < row.length - this.filter.width; j += this.filter.stride) {
+        let sum = 0;
+        for (let k = i; k < this.filter.height; k++) {
+          for (let l = j; l < this.filter.width; l++) {
+            sum += image[k][l] * this.filter.kernel[k][l];
+          }
+        }
+        sum += this.filter.bias;
+        sum = this.filter.activation.output(sum);
+        resRow.push(sum);
+      }
+      featureMap.push(resRow);
+    }
+    this.featureMap = featureMap;
+  }
+
+  maxPool(): number[][] {
+    let inputs = [];
+    for (let i = 0; i < this.featureMap.length - this.pool.height; i += this.pool.height) {
+      let row = this.featureMap[i];
+      let resRow = [];
+      for (let j = 0; j < row.length - this.pool.width; j += Math.max(this.pool.width, this.pool.stride)) {
+        let max = -Infinity;
+        for (let k = i; i < this.pool.height; i++) {
+          for (let l = j; l < this.pool.width; j++) {
+            let num = this.featureMap[k][l];
+            if (num > max) {
+              max = num;
+            }
+          }
+        }
+        resRow.push(max);
+      }
+      inputs.push(resRow);
+    }
+    return inputs;
+  }
+}
+
+export function cnnForwardProp(image: number[][], convNetwork: convolutionalLayer[], network: Node[][]) {
+  let forwardImage = image;
+  for (let i = 0; i < convNetwork.length; i++) {
+    const layer = convNetwork[i];
+    layer.convolute(forwardImage);
+    layer.maxPool();
+    forwardImage = layer.featureMap;
+  }
+  return forwardProp(network, flat(forwardImage));
+}
+
+export function cnnBackProp(network: Node[][], target: number[], lossFn: fns.Loss) {
+  backProp(network, target, lossFn);
+}
+
+/**
+ * HELPER FUNCTIONS
+ */
+function flat<Type>(arr: Type[][]): Type[] {
+  let flatArr = arr.reduce((acc, curr) => acc.concat(curr), []);
+  return flatArr;
+}
+
+function init2DArray(height: number, width: number): number[][] {
+  const result: number[][] = [];
+  for (let i = 0; i < height; i++) {
+    const row = [];
+    for (let j = 0; j < width; j++) {
+      const val = Math.random() - 0.5;
+      row.push(val);
+    }
+    result.push(row);
+  }
+  return result;
+}
