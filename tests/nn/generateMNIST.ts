@@ -17,7 +17,7 @@ function readMNISTCSV(csvFile: string, numSamples: number): { labels: number[], 
 }
 
 // Example usage
-const numTrainSamples = 10000;
+const numTrainSamples = 40000;
 const numTestSamples = 1000;
 
 export const { labels: trainLabels, flattenedData: flattenedTrainData } = readMNISTCSV('data/mnist_train.csv', numTrainSamples);
