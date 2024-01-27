@@ -115,15 +115,15 @@ function testBackProp() {
 // }
 
 function testMNIST() {
-  const network = nn.buildNetwork([784, 15, 10], fn.Activations.RELU, fn.Activations.SIGMOID);
+  const network = nn.buildNetwork([784, 30, 10], fn.Activations.RELU, fn.Activations.SIGMOID);
   for (let i = 0; i < flattenedTrainData.length; i++) {
     console.log(`Training: ${i}`);
     nn.forwardProp(network, flattenedTrainData[i]);
     let label = [0,0,0,0,0,0,0,0,0,0];
     label[trainLabels[i]] = 1;
     nn.backProp(network, label, fn.Loss.SQUARE);
-    if ((i+1) % 1 === 0) {
-      nn.updateParams(network, 0.8);
+    if ((i+1) % 10 === 0) {
+      nn.updateParams(network, 3);
     }
   }
 
@@ -161,7 +161,7 @@ function testMNIST() {
   console.log(corr/num);
   console.log(errors);
 
-  // achieved 91% with this configuration
+  // achieved 70-90% with [784, 30, 10], 3.0 lr, epoch 10
 }
 
 function testMNISTGen() {

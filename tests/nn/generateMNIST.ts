@@ -18,13 +18,15 @@ function readMNISTCSV(csvFile: string, numSamples: number): { labels: number[], 
 
 // Example usage
 const numTrainSamples = 10000;
-const numTestSamples = 100;
+const numTestSamples = 1000;
 
 export const { labels: trainLabels, flattenedData: flattenedTrainData } = readMNISTCSV('data/mnist_train.csv', numTrainSamples);
 export const { labels: testLabels, flattenedData: flattenedTestData } = readMNISTCSV('data/mnist_test.csv', numTestSamples);
 
+// const n = 8;
+
 // for (let i = 0; i < flattenedTrainData[0].length; i++) {
-//   process.stdout.write(String(flattenedTrainData[0][i]))
+//   process.stdout.write(String(flattenedTrainData[n][i]))
 //   process.stdout.write(', ')
 // }
-// console.log(trainLabels[0])
+// console.log(trainLabels[n])
